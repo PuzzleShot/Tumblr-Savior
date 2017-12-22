@@ -1,8 +1,10 @@
 {
 	"name": "Tumblr Savior",
-	"version": "0.5.4",
+	"version": "0.6.0",
 	"description": "Tired of iPad posts filling up your dashboard? Hate hearing about an athlete's latest blunders? Tumblr Savior is here to save you!",
+	"author": "Bjorn Stromberg",
 	"background": {
+		"persistent": true,
 		"scripts": [ "data/defaults.js", "lib/main.js" ]
 	},
 	"browser_action": {

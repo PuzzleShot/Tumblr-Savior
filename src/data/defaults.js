@@ -1,5 +1,5 @@
 var defaultSettings = {
-	'version': '0.5.4',
+	'version': '0.6.0',
 	'listBlack': ['iphone', 'ipad'],
 	'listWhite': ['bjorn', 'octopus'],
 	'show_notice': true,
@@ -23,5 +23,7 @@ var defaultSettings = {
 	'hide_trending_badges': true,
 	'hide_sponsored_notifications': true,
 	'hide_yahoo_ads': true,
-	'remove_redirects': true
+	'remove_redirects': true,
+	'tumblrFilteredTags': [],
+	'lastFilteredTagsUpdate': null
 }; // Initialize default values.

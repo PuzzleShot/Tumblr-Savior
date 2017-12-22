@@ -1,24 +1,13 @@
-var settings;
+var browser, settings;
 
-function detectBrowser() {
-	if (window && window.chrome) {
-		return 'Chrome';
-	}
+function detectExtensionType() {
 	if (window && window.safari) {
-		return 'Safari';
+		return 'SafariExtension';
 	}
-}
-
-var browser = detectBrowser();
-
-function chromeMessageHandler(message, sender, sendResponse) {
-	var response = {};
-
-	if (message === 'getSettings') {
-		response.data = localStorage.settings;
+	if (window && (window.chrome || window.browser)) {
+		return 'WebExtension';
 	}
-
-	sendResponse(response);
+	throw new Error('browser extension system was not detected correctly')
 }
 
 function parseSettings() {
@@ -35,23 +24,6 @@ function parseSettings() {
 	}
 
 	return parsedSettings;
-}
-
-function checkurl(url, filter) {
-	var f, filterRegex, re;
-
-	if (url === undefined || url === null) {
-		return false;
-	}
-
-	for (f = 0; f < filter.length; f++) {
-		filterRegex = filter[f].replace(/\x2a/g, '(.*?)');
-		re = new RegExp(filterRegex);
-		if (url.match(re)) {
-			return true;
-		}
-	}
-	return false;
 }
 
 function addToBlackList(theword) {
@@ -72,21 +44,76 @@ function addToBlackList(theword) {
 	return true;
 }
 
-function chromeAddToBlackList(info, tab) {
-	var theword, chromeViews, chromeView;
+var extensionType = detectExtensionType();
+
+if (extensionType === 'WebExtension') {
+	browser = window.chrome || window.browser;
+	browser.runtime.onMessage.addListener(webExtensionMessageHandler);
+
+	settings = parseSettings();
+
+	if (settings.context_menu === 'true' || settings.context_menu === true) {
+		browser.contextMenus.create({
+			'type': 'normal',
+			'title': 'Add \'%s\' to Tumblr Savior black list',
+			'contexts': ['selection'],
+			'documentUrlPatterns': ['http://www.tumblr.com/*', 'https://www.tumblr.com/*'],
+			'onclick': webExtensionAddToBlackList
+		});
+	}
+} else if (extensionType === 'SafariExtension') {
+	safari.application.addEventListener('message', safariMessageHandler, false);
+	safari.application.addEventListener('command', safariCommandHandler, false);
+	safari.application.addEventListener('contextmenu', safariContextMenuHandler, false);
+	safari.application.addEventListener('validate', safariValidateHandler, false);
+}
+
+// WebExtension
+
+function webExtensionMessageHandler(message, sender, sendResponse) {
+	var response = {};
+
+	if (message === 'getSettings') {
+		response.data = localStorage.settings;
+	}
+
+	sendResponse(response);
+}
+
+function webExtensionAddToBlackList(info, tab) {
+	var theword, views, view;
 	theword = info.selectionText;
 
 	if (theword && addToBlackList(theword)) {
-		chromeViews = chrome.extension.getViews();
+		views = browser.extension.getViews();
 
-		for (chromeView = 0; chromeView < chromeViews.length; chromeView++) {
-			if (chromeViews[chromeView].location === chrome.extension.getURL('data/options.html')) {
-				chromeViews[chromeView].location.reload();
+		for (view = 0; view < views.length; view += 1) {
+			if (views[view].location === browser.extension.getURL('data/options.html')) {
+				views[view].location.reload();
 			}
 		}
 
-		chrome.tabs.sendMessage(tab.id, 'refreshSettings');
+		browser.tabs.sendMessage(tab.id, 'refreshSettings');
 	}
+}
+
+// SafariExtension
+
+function checkurl(url, filter) {
+	var f, filterRegex, re;
+
+	if (url === undefined || url === null) {
+		return false;
+	}
+
+	for (f = 0; f < filter.length; f++) {
+		filterRegex = filter[f].replace(/\x2a/g, '(.*?)');
+		re = new RegExp(filterRegex);
+		if (url.match(re)) {
+			return true;
+		}
+	}
+	return false;
 }
 
 function safariMessageHandler(event) {
@@ -170,30 +197,3 @@ function safariValidateHandler(event) {
 	}
 }
 
-switch (browser) {
-case 'Chrome':
-	console.log('Setting up the',browser,'backend.');
-	chrome.runtime.onMessage.addListener(chromeMessageHandler);
-
-	settings = parseSettings();
-
-	if (settings.context_menu === 'true' || settings.context_menu === true) {
-		chrome.contextMenus.create({
-			'type': 'normal',
-			'title': 'Add \'%s\' to Tumblr Savior black list',
-			'contexts': ['selection'],
-			'documentUrlPatterns': ['http://www.tumblr.com/*', 'https://www.tumblr.com/*'],
-			'onclick': chromeAddToBlackList
-		});
-	}
-	break;
-case 'Safari':
-	console.log('Setting up the',browser,'backend.');
-	safari.application.addEventListener('message', safariMessageHandler, false);
-	safari.application.addEventListener('command', safariCommandHandler, false);
-	safari.application.addEventListener('contextmenu', safariContextMenuHandler, false);
-	safari.application.addEventListener('validate', safariValidateHandler, false);
-	break;
-default:
-	console.error('I\'m sorry, but your browser extension system was not detected correctly.');
-}

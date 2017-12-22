@@ -86,11 +86,12 @@ function tabClick(whichTab) {
 		backgroundDiv.appendChild(switchfrom);
 		foregroundDiv.appendChild(switchto);
 		switch (whichTab.id) {
-		case 'aboutTab':
+		case 'listsTab':
+		case 'settingsTab':
 			load_btn.style.display = 'none';
-			save_btn.style.display = 'none';
-			reset_btn.style.display = 'none';
-			spacerDiv.style.display = 'none';
+			save_btn.style.display = '';
+			reset_btn.style.display = '';
+			spacerDiv.style.display = '';
 			break;
 		case 'saveloadTab':
 			load_btn.style.display = '';
@@ -98,12 +99,11 @@ function tabClick(whichTab) {
 			reset_btn.style.display = '';
 			spacerDiv.style.display = 'none';
 			break;
-		case 'listsTab':
-		case 'settingsTab':
+		default:
 			load_btn.style.display = 'none';
-			save_btn.style.display = '';
-			reset_btn.style.display = '';
-			spacerDiv.style.display = '';
+			save_btn.style.display = 'none';
+			reset_btn.style.display = 'none';
+			spacerDiv.style.display = 'none';
 			break;
 		}
 	}
@@ -402,17 +402,13 @@ function addInputClickHandler(e) {
 }
 
 function contentLoaded() {
-	var save_btn, reset_btn, load_btn, listWhiteAdd, listBlackAdd, listsTab, settingsTab, saveloadTab, aboutTab, settingsValue, addButton, version_div, browser_span;
+	var save_btn, reset_btn, load_btn, listWhiteAdd, listBlackAdd, tabs, settingsValue, addButton, version_div, browser_span;
 
 	save_btn = document.getElementById('save_btn');
 	reset_btn = document.getElementById('reset_btn');
 	load_btn = document.getElementById('load_btn');
 	listWhiteAdd = document.getElementById('listWhiteAdd');
 	listBlackAdd = document.getElementById('listBlackAdd');
-	listsTab = document.getElementById('listsTab');
-	settingsTab = document.getElementById('settingsTab');
-	saveloadTab = document.getElementById('saveloadTab');
-	aboutTab = document.getElementById('aboutTab');
 
 	save_btn.addEventListener('click', saveOptions);
 
@@ -435,30 +431,21 @@ function contentLoaded() {
 		}
 	}
 
-	listsTab.addEventListener('click', function (e) {
-		tabClick(listsTab);
-		e.preventDefault();
-		e.stopPropagation();
-	}, false);
+	function tabClickHandler(tab) {
+		return function (e) {
+			tabClick(tab);
+			e.preventDefault();
+			e.stopPropagation();
+		}
+	}
 
-	settingsTab.addEventListener('click', function (e) {
-		tabClick(settingsTab);
-		e.preventDefault();
-		e.stopPropagation();
-	}, false);
+	tabs = document.getElementById('tabs');
 
-	saveloadTab.addEventListener('click', function (e) {
-		tabClick(saveloadTab);
-		e.preventDefault();
-		e.stopPropagation();
-	}, false);
-
-	aboutTab.addEventListener('click', function (e) {
-		tabClick(aboutTab);
-		e.preventDefault();
-		e.stopPropagation();
-	}, false);
-
+	for (tabId in tabs.children) {
+		if (tabs.children.hasOwnProperty(tabId)) {
+			tabs.children[tabId].addEventListener('click', tabClickHandler(tabs.children[tabId]), false);
+		}
+	}
 
 	version_div = document.getElementById('version_div');
 	version_div.textContent = 'v' + defaultSettings.version; //use default so we're always showing current version regardless of what people have saved.

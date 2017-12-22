@@ -12,7 +12,13 @@
       <h1 style="line-height:32px;height:32px;margin-top:16px;">Tumblr Savior <span id="browser_span"> </span></h1>
     </div>
     <div id="tabsDiv">
-      <ul id="tabs"><li id="listsTab" class="selected"><a href="#lists">Lists</a></li><li id="settingsTab"><a href="#settings">Settings</a></li><li id="saveloadTab"><a href="#saveload">Save/Load</a></li><li id="aboutTab"><a href="#about">About</a></li>
+      <ul id="tabs">
+        <li id="listsTab" class="selected"><a href="#lists">Lists</a></li>
+        <li id="settingsTab"><a href="#settings">Settings</a></li>
+        <li id="filteredTagsTab"><a href="#filteredTags">Filtered Tags</a></li>
+        <li id="saveloadTab"><a href="#saveload">Save/Load</a></li>
+        <li id="aboutTab"><a href="#about">About</a></li>
+      </ul>
     </div>
     <div id="content">
       <div id="foregroundDiv">
@@ -98,6 +104,14 @@
           </div>
           <div id="remove_redirects">
             <input type="checkbox" id="remove_redirects_cb" name="remove_redirects_cb" /> <label for="remove_redirects_cb">Remove t.umblr.com redirects.</label>
+          </div>
+        </div>
+        <div id="filteredTagsDiv">
+          <div id="listLocal">
+            <h2>Local</h2>
+          </div>
+          <div id="listRemote">
+            <h2>Remote</h2>
           </div>
         </div>
         <div id="saveloadDiv">

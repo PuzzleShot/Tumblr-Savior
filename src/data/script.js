@@ -6,7 +6,7 @@
 // ==/UserScript==
 
 var defaultSettings = {
-	'version': '0.5.4',
+	'version': '0.6.0',
 	'listBlack': ['iphone', 'ipad'],
 	'listWhite': ['bjorn', 'octopus'],
 	'show_notice': true,
@@ -30,7 +30,9 @@ var defaultSettings = {
 	'hide_trending_badges': true,
 	'hide_sponsored_notifications': true,
 	'hide_yahoo_ads': true,
-	'remove_redirects': true
+	'remove_redirects': true,
+	'tumblrFilteredTags': [],
+	'lastFilteredTagsUpdate': null
 }; // Initialize default values.
 
 var invalidTumblrURLs = [
@@ -769,11 +771,56 @@ function waitForPosts() {
 	}
 }
 
+function getFilteredTags(cb) {
+	var xhr = new window.XMLHttpRequest();
+
+	xhr.onload = function (event) {
+		if (xhr.status === 200) {
+			var data;
+			try {
+				data = JSON.parse(xhr.response);
+			} catch (e) {
+				return cb(e);
+			}
+			return cb(null, data.response.filtered_tags);
+		}
+		return cb('failed');
+	};
+
+	xhr.open('GET', 'https://www.tumblr.com/svc/user/filtered_tags');
+	xhr.setRequestHeader('X-tumblr-form-key', document.getElementById('tumblr_form_key').content);
+	xhr.send();
+}
+
+function addFilteredTags(tags, cb) {
+	var data = encodeURI(tags.map(function (tag) { return 'filtered_tags[]=' + tag; }));
+	var xhr = new window.XMLHttpRequest();
+
+	xhr.onload = function (event) {
+		if (xhr.status === 200) {
+			return cb();
+		}
+		return cb('failed');
+	};
+
+	xhr.open('POST', 'https://www.tumblr.com/svc/user/filtered_tags');
+	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+	xhr.setRequestHeader('X-tumblr-form-key', document.getElementById('tumblr_form_key').content);
+	xhr.send(data);
+}
 
 function safariMessageHandler(event) {
-	if (event.name === 'refreshSettings') {
-		safari.self.tab.dispatchMessage('getSettings');
-		return;
+	switch (event.name) {
+	case 'addFilteredTags':
+		return addFilteredTags(event.data, function (error, filteredTags) {
+			safari.self.tab.dispatchMessage('updateFilteredTags', filteredTags, error);
+		});
+	case 'getFilteredTags':
+		return getFilteredTags(function (error, filteredTags) {
+			safari.self.tab.dispatchMessage('updateFilteredTags', filteredTags, error);
+		});
+	case 'refreshSettings':
+		return safari.self.tab.dispatchMessage('getSettings');
 	}
 
 	parseSettings(event.message);
@@ -810,8 +857,17 @@ function initializeTumblrSavior(browser) {
 	case 'Opera':
 		chrome.runtime.onMessage.addListener(
 			function (request) {
-				if (request === 'refreshSettings') {
-					chrome.runtime.sendMessage(null, 'getSettings', null, chromeHandleMessage);
+				switch(request) {
+				case 'addFilteredTags':
+					return addFilteredTags(function (error, filteredTags) {
+						chrome.runtime.sendMessage(null, 'updateFilteredTags', filteredTags, error);
+					});
+				case 'getFilteredTags':
+					return getFilteredTags(function (error, filteredTags) {
+						chrome.runtime.sendMessage(null, 'updateFilteredTags', filteredTags, error);
+					});
+				case 'refreshSettings':
+					return chrome.runtime.sendMessage(null, 'getSettings', null, chromeHandleMessage);
 				}
 			}
 		);
