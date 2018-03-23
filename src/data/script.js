@@ -706,27 +706,9 @@ function wireupnodes() {
 	);
 
 	cssRules.push(
-		'@-moz-keyframes nodeInserted {' +
-		'    from { clip: rect(1px, auto, auto, auto); }' +
-		'    to { clip: rect(0px, auto, auto, auto); }' +
-		'}'
-	);
-
-	cssRules.push(
-		'@-webkit-keyframes nodeInserted {' +
-		'    from { clip: rect(1px, auto, auto, auto); }' +
-		'    to { clip: rect(0px, auto, auto, auto); }' +
-		'}'
-	);
-
-	cssRules.push(
 		'li.post_container div.post, li.post, ol.posts li, article.post {' +
 		'    animation-duration: 1ms;' +
-		'    -moz-animation-duration: 1ms;' +
-		'    -webkit-animation-duration: 1ms;' +
 		'    animation-name: nodeInserted;' +
-		'    -moz-animation-name: nodeInserted;' +
-		'    -webkit-animation-name: nodeInserted;' +
 		'}'
 	);
 
